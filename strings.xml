@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Intents App</string>
+    <string name="share_text">Check out this cool Android Intents demo app!</string>
+</resources>
