@@ -1,0 +1,144 @@
+Android Intents Implementation Guide
+This guide explains the implementation of the Android Intents assignment, highlighting the key concepts and coding practices used.
+
+Intents in Android
+An intent is a messaging object used to request an action from another app component. Intents are primarily used for:
+
+Starting an activity
+Starting a service
+Delivering a broadcast
+Types of Intents
+Explicit Intents: Used when you know exactly which component (like a specific Activity) you want to start
+Implicit Intents: Used when you want to perform an action without specifying which component should handle it
+Project Components
+1. MainActivity
+The main screen of our application contains:
+
+An EditText for user input
+Buttons to demonstrate different types of intents
+Explicit Intent Implementation
+kotlin
+val intent = Intent(this, SecondActivity::class.java)
+val message = editTextInput.text.toString()
+if (message.isNotEmpty()) {
+    intent.putExtra("MESSAGE_KEY", message)
+}
+startActivity(intent)
+This code:
+
+Creates an explicit intent targeting SecondActivity
+Gets user input from the EditText
+Adds the input as an extra to the intent
+Starts the second activity
+Implicit Intent: Opening a Web Page
+kotlin
+val webpage = Uri.parse("https://www.example.com")
+val intent = Intent(Intent.ACTION_VIEW, webpage)
+if (intent.resolveActivity(packageManager) != null) {
+    startActivity(intent)
+}
+This code:
+
+Creates an implicit intent with ACTION_VIEW
+Uses a URI to specify the web page to open
+Checks if any app can handle this intent
+Starts the appropriate app (web browser)
+Implicit Intent: Sharing Text
+kotlin
+val shareText = getString(R.string.share_text)
+val intent = Intent(Intent.ACTION_SEND).apply {
+    type = "text/plain"
+    putExtra(Intent.EXTRA_TEXT, shareText)
+}
+val chooser = Intent.createChooser(intent, chooserTitle)
+startActivity(chooser)
+This code:
+
+Creates an implicit intent with ACTION_SEND
+Sets the MIME type to "text/plain"
+Adds the text to share as an extra
+Creates a chooser dialog for the user to select an app
+Starts the chosen app
+2. SecondActivity
+This activity demonstrates:
+
+Receiving data from an intent
+Starting another activity for result
+Receiving Intent Data
+kotlin
+val receivedMessage = intent.getStringExtra("MESSAGE_KEY")
+if (!receivedMessage.isNullOrEmpty()) {
+    textViewReceivedMessage.text = "Received message: $receivedMessage"
+}
+This code:
+
+Retrieves the message from the intent extras
+Displays it in a TextView
+Using Activity Result API
+Modern Android applications use the Activity Result API instead of the deprecated startActivityForResult():
+
+kotlin
+private val resultLauncher = registerForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+) { result ->
+    if (result.resultCode == Activity.RESULT_OK) {
+        val data: Intent? = result.data
+        val resultMessage = data?.getStringExtra("RESULT_MESSAGE") ?: "No result data"
+        textViewResultFromThird.text = resultMessage
+    }
+}
+
+// Usage:
+val intent = Intent(this, ResultActivity::class.java)
+resultLauncher.launch(intent)
+This code:
+
+Registers a callback to handle the result
+Creates an intent for ResultActivity
+Uses the launcher to start the activity and handle the result
+3. ResultActivity
+This activity demonstrates:
+
+Returning a result to the calling activity
+kotlin
+val resultIntent = Intent().apply {
+    putExtra("RESULT_MESSAGE", resultMessage)
+}
+setResult(Activity.RESULT_OK, resultIntent)
+finish()
+This code:
+
+Creates a new intent for the result
+Adds the result message as an extra
+Sets the result code and intent
+Finishes the activity, returning to the caller
+Key Learning Points
+Explicit vs Implicit Intents:
+Explicit intents directly specify the target component
+Implicit intents describe an action and let the system find a component
+Intent Extras:
+Used to pass data between activities
+Accessed using keys (e.g., "MESSAGE_KEY")
+Activity Result API:
+Modern approach to handle activity results
+Replaces the deprecated onActivityResult method
+Intent Resolution:
+Using resolveActivity() to check if an app can handle the intent
+Creating choosers for multiple app options
+AndroidManifest.xml:
+All activities must be declared in the manifest
+Permissions (like INTERNET) must be declared
+Testing Your Implementation
+To test your implementation:
+
+Run the app on an emulator or device
+Enter text in the EditText and click "Go to Second Activity"
+Verify the text appears in SecondActivity
+Click "Open Web Page" to test the web browser intent
+Click "Share Text" to test the share intent
+In SecondActivity, click "Send Result" and enter text in ResultActivity
+Verify the result appears in SecondActivity
+Common Issues
+Activity Not Found Exception: Make sure all activities are declared in the AndroidManifest.xml
+Null Intent Extras: Always check if extras are null before accessing them
+No App to Handle Intent: Use resolveActivity() to check if any app can handle your intent
